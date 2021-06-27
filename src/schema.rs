@@ -1,10 +1,10 @@
 table! {
-    employees (id) {
+    users (id) {
         id -> Int4,
+        username -> Varchar,
+        password -> Varchar,
         first_name -> Varchar,
         last_name -> Varchar,
-        department -> Varchar,
-        salary -> Int4,
-        age -> Int4,
+        phone_number -> Int4,
     }
 }
