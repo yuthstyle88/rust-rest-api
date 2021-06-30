@@ -6,7 +6,6 @@ CREATE TABLE "users"
     password VARCHAR NOT NULL,
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
-    phone_number INT NOT NULL
-
+    phone_number VARCHAR NOT NULL
 
 )

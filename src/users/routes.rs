@@ -18,6 +18,20 @@ async fn find(id: web::Path<i32>) -> Result<HttpResponse, CustomError> {
 #[post("/post_login")]
 async fn login(user: web::Json<UserLogin>) -> Result<HttpResponse, CustomError> {
     let user = Users::login(user.username.clone(),user.password.clone())?;
+   /* let user = Users{
+        id: 0,
+        username: "xxx".to_string(),
+        password: "xxx".to_string(),
+        first_name: "xxx".to_string(),
+        last_name: "xxx".to_string(),
+        phone_number: 0
+    };*/
+    Ok(HttpResponse::Ok().json(user))
+}
+
+#[post("/post_signup")]
+async fn signup(user: web::Json<User>) -> Result<HttpResponse, CustomError> {
+    let user = Users::create(user.into_inner())?;
     Ok(HttpResponse::Ok().json(user))
 }
 
@@ -46,6 +60,7 @@ pub fn init_routes(comfig: &mut web::ServiceConfig) {
     comfig.service(find_all);
     comfig.service(find);
     comfig.service(login);
+    comfig.service(signup);
     comfig.service(create);
     comfig.service(update);
     comfig.service(delete);

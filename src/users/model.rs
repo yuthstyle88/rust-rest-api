@@ -11,7 +11,7 @@ pub struct User {
     pub password: String,
     pub first_name: String,
     pub last_name: String,
-    pub phone_number: i32
+    pub phone_number: String
 }
 
 #[derive(Debug,Serialize, Deserialize, AsChangeset, Insertable)]
@@ -30,7 +30,7 @@ pub struct Users {
     pub password: String,
     pub first_name: String,
     pub last_name: String,
-    pub phone_number: i32
+    pub phone_number: String
 }
 
 impl Users {

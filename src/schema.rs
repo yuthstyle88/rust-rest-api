@@ -5,6 +5,6 @@ table! {
         password -> Varchar,
         first_name -> Varchar,
         last_name -> Varchar,
-        phone_number -> Int4,
+        phone_number -> Varchar,
     }
 }
