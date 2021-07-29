@@ -1,55 +1,69 @@
-use actix_web::http::StatusCode;
-use actix_web::{HttpResponse, ResponseError};
-use diesel::result::Error as DieselError;
-use serde::Deserialize;
-use serde_json::json;
 use std::fmt;
 
-#[derive(Debug, Deserialize)]
-pub struct CustomError {
-    pub error_status_code: u16,
-    pub error_message: String,
+use actix_web::{http, HttpResponse, ResponseError};
+use actix_web::dev::{ServiceResponse, HttpResponseBuilder};
+use actix_web::error::{JsonPayloadError, PayloadError};
+use actix_web::error::Error as ActixError;
+use actix_web::http::{StatusCode, header};
+
+use diesel::result::{DatabaseErrorKind, Error};
+
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+
+use thiserror::Error;
+
+#[derive(Debug, Error,Serialize)]
+#[error("{{\"error\":\"{message}\"}}")]
+pub struct ApiError {
+    pub code: u16,
+    pub message: String,
 }
 
-impl CustomError {
-    pub fn new(error_status_code: u16, error_message: String) -> CustomError {
-        CustomError {
-            error_status_code,
-            error_message,
+impl ApiError {
+    pub fn err(code: u16,msg: &str) -> Self {
+        ApiError {
+            code,
+            message: msg.to_string(),
         }
     }
 }
 
-impl fmt::Display for CustomError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.error_message.as_str())
+#[derive(Debug)]
+pub struct MyError {
+    pub inner: anyhow::Error,
+}
+
+impl MyError {
+    pub fn new(message: anyhow::Error) -> MyError {
+        MyError { inner: message }
     }
 }
 
-impl From<DieselError> for CustomError {
-    fn from(error: DieselError) -> CustomError {
-        match error {
-            DieselError::DatabaseError(_, err) => CustomError::new(409, err.message().to_string()),
-            DieselError::NotFound => {
-                CustomError::new(404, "The employee record not found".to_string())
-            }
-            err => CustomError::new(500, format!("Unknown Diesel error: {}", err)),
+impl<T> From<T> for MyError
+    where
+        T: Into<anyhow::Error>,
+{
+    fn from(t: T) -> Self {
+        MyError { inner: t.into() }
+    }
+}
+
+impl std::fmt::Display for MyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl  ResponseError for MyError {
+    fn status_code(&self) -> StatusCode {
+        match self.inner.downcast_ref::<diesel::result::Error>() {
+            Some(diesel::result::Error::NotFound) => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-}
 
-impl ResponseError for CustomError {
     fn error_response(&self) -> HttpResponse {
-        let status_code = match StatusCode::from_u16(self.error_status_code) {
-            Ok(status_code) => status_code,
-            Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-        };
-
-        let error_message = match status_code.as_u16() < 500 {
-            true => self.error_message.clone(),
-            false => "Internal server error".to_string(),
-        };
-
-        HttpResponse::build(status_code).json(json!({ "message": error_message }))
+        HttpResponse::Ok().json(ApiError::err(self.status_code().as_u16(), &*self.inner.to_string()))
     }
 }

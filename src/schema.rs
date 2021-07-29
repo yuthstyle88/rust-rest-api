@@ -6,5 +6,6 @@ table! {
         first_name -> Varchar,
         last_name -> Varchar,
         phone_number -> Varchar,
+        created_at -> Timestamp,
     }
 }

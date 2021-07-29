@@ -2,7 +2,7 @@
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
-
+#[macro_use] extern crate tr;
 use actix_web::{App, HttpServer};
 use dotenv::dotenv;
 use listenfd::ListenFd;
@@ -12,6 +12,7 @@ mod db;
 mod users;
 mod error_handler;
 mod schema;
+mod response;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {

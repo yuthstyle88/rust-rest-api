@@ -1,9 +1,10 @@
-use crate::error_handler::CustomError;
+use crate::error_handler::MyError;
 use diesel::pg::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use lazy_static::lazy_static;
 use r2d2;
 use std::env;
+use anyhow::anyhow;
 
 type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
@@ -24,7 +25,7 @@ pub fn init() {
     embedded_migrations::run(&conn).unwrap();
 }
 
-pub fn connection() -> Result<DbConnection, CustomError> {
+pub fn connection() -> Result<DbConnection, MyError> {
     POOL.get()
-        .map_err(|e| CustomError::new(500, format!("Failed getting db connection: {}", e)))
+        .map_err(|e| MyError::new( anyhow!("Failed getting db connection: {}", e)))
 }

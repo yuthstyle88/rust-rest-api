@@ -1,57 +1,61 @@
-use crate::users::{User, Users, UserLogin};
-use crate::error_handler::CustomError;
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use crate::users::{User, Users, UserLogin, UserUpdate};
+use crate::error_handler::{MyError, ApiError};
+use actix_web::{delete, get, post, web, HttpResponse, Responder};
 use serde_json::json;
+use anyhow::anyhow;
+use actix_web::http::StatusCode;
+use crate::response::MyResult;
 
 #[get("/users")]
-async fn find_all() -> Result<HttpResponse, CustomError> {
-    let user = Users::find_all()?;
+async fn find_all() -> MyResult {
+    let user = Users::find_all().map(|u| u)?;
     Ok(HttpResponse::Ok().json(user))
 }
 
 #[get("/users/{id}")]
-async fn find(id: web::Path<i32>) -> Result<HttpResponse, CustomError> {
-    let user = Users::find(id.into_inner())?;
-    Ok(HttpResponse::Ok().json(user))
+async fn find(id: web::Path<i32>) -> Result<impl Responder, MyError> {
+    let user = Users::find(id.into_inner()).map(|u| u).map_err(|e| e)?;
+
+    Ok(web::Json(user))
 }
 
 #[post("/post_login")]
-async fn login(user: web::Json<UserLogin>) -> Result<HttpResponse, CustomError> {
-    let user = Users::login(user.username.clone(),user.password.clone())?;
-   /* let user = Users{
-        id: 0,
-        username: "xxx".to_string(),
-        password: "xxx".to_string(),
-        first_name: "xxx".to_string(),
-        last_name: "xxx".to_string(),
-        phone_number: 0
-    };*/
+async fn login(user: web::Json<UserLogin>) -> Result<HttpResponse, MyError> {
+    let user = Users::login(user.username.clone(), user.password.clone())?;
+    /* let user = Users{
+         id: 0,
+         username: "xxx".to_string(),
+         password: "xxx".to_string(),
+         first_name: "xxx".to_string(),
+         last_name: "xxx".to_string(),
+         phone_number: 0
+     };*/
     Ok(HttpResponse::Ok().json(user))
 }
 
 #[post("/post_signup")]
-async fn signup(user: web::Json<User>) -> Result<HttpResponse, CustomError> {
+async fn signup(user: web::Json<User>) -> Result<HttpResponse, MyError> {
     let user = Users::create(user.into_inner())?;
     Ok(HttpResponse::Ok().json(user))
 }
 
 #[post("/users")]
-async fn create(user: web::Json<User>) -> Result<HttpResponse, CustomError> {
-    let user = Users::create(user.into_inner())?;
-    Ok(HttpResponse::Ok().json(user))
+async fn create(user: web::Json<User>) -> Result<impl Responder, MyError> {
+    let user = Users::create(user.into_inner()).map(|u| u)?;
+    Ok(web::Json(user))
 }
 
-#[put("/users/{id}")]
+#[post("/update_user/{id}")]
 async fn update(
     id: web::Path<i32>,
-    user: web::Json<User>,
-) -> Result<HttpResponse, CustomError> {
+    user: web::Json<UserUpdate>,
+) -> Result<impl Responder, MyError> {
     let user = Users::update(id.into_inner(), user.into_inner())?;
-    Ok(HttpResponse::Ok().json(user))
+    Ok(web::Json(user))
 }
 
 #[delete("/users/{id}")]
-async fn delete(id: web::Path<i32>) -> Result<HttpResponse, CustomError> {
+async fn delete(id: web::Path<i32>) -> Result<impl Responder, MyError> {
     let deleted_user = Users::delete(id.into_inner())?;
     Ok(HttpResponse::Ok().json(json!({ "deleted": deleted_user })))
 }
