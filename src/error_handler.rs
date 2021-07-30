@@ -1,30 +1,21 @@
-use std::fmt;
+use actix_web::{HttpResponse,ResponseError};
+use actix_web::http::StatusCode;
+use serde::Serialize;
 
-use actix_web::{http, HttpResponse, ResponseError};
-use actix_web::dev::{ServiceResponse, HttpResponseBuilder};
-use actix_web::error::{JsonPayloadError, PayloadError};
-use actix_web::error::Error as ActixError;
-use actix_web::http::{StatusCode, header};
+#[cfg(not(tarpaulin_include))]
+pub type MyResult<V> = std::result::Result<V, MyError>;
 
-use diesel::result::{DatabaseErrorKind, Error};
-
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-
-use thiserror::Error;
-
-#[derive(Debug, Error,Serialize)]
-#[error("{{\"error\":\"{message}\"}}")]
-pub struct ApiError {
+#[derive(Debug, Serialize)]
+pub struct ApiError<'a> {
     pub code: u16,
-    pub message: String,
+    pub message: &'a str,
 }
 
-impl ApiError {
-    pub fn err(code: u16,msg: &str) -> Self {
+impl<'a> ApiError<'a> {
+    pub fn err(code: u16, msg: &'a str) -> Self {
         ApiError {
             code,
-            message: msg.to_string(),
+            message: msg,
         }
     }
 }
@@ -55,7 +46,7 @@ impl std::fmt::Display for MyError {
     }
 }
 
-impl  ResponseError for MyError {
+impl ResponseError for MyError {
     fn status_code(&self) -> StatusCode {
         match self.inner.downcast_ref::<diesel::result::Error>() {
             Some(diesel::result::Error::NotFound) => StatusCode::NOT_FOUND,

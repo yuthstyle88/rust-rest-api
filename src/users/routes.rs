@@ -1,10 +1,11 @@
 use crate::users::{User, Users, UserLogin, UserUpdate};
 use crate::error_handler::{MyError, ApiError};
-use actix_web::{delete, get, post, web, HttpResponse, Responder};
+use actix_web::{delete, get, post, web, HttpResponse, Responder,Result};
 use serde_json::json;
 use anyhow::anyhow;
 use actix_web::http::StatusCode;
-use crate::{res,response::JsonOk};
+use crate::{res,response::{Json,JsonOk}};
+use crate::response::MyResult;
 
 
 #[get("/users")]
@@ -31,7 +32,9 @@ async fn login(user: web::Json<UserLogin>) -> Result<HttpResponse, MyError> {
          last_name: "xxx".to_string(),
          phone_number: 0
      };*/
-    Ok(HttpResponse::Ok().json(user))
+    let ddd = Json::new(200, &*user.first_name, user.created_at);
+   // let ddd = Json::new(200,xxx.as_str(),"sdfsdf");
+    Ok(HttpResponse::Ok().json(ddd))
 }
 
 #[post("/post_signup")]
@@ -41,7 +44,7 @@ async fn signup(user: web::Json<User>) -> Result<HttpResponse, MyError> {
 }
 
 #[post("/users")]
-async fn create(user: web::Json<User>) -> Result<impl Responder, MyError> {
+async fn create(user: web::Json<User>) -> MyResult<impl Responder> {
     let user = Users::create(user.into_inner()).map(|u| u)?;
     Ok(web::Json(user))
 }
@@ -52,7 +55,7 @@ async fn update(
     user: web::Json<UserUpdate>,
 ) -> Result<impl Responder, MyError> {
     let user = Users::update(id.into_inner(), user.into_inner())?;
-    Ok(web::Json(user))
+    Ok(HttpResponse::Ok().json((user)))
 }
 
 #[delete("/users/{id}")]
