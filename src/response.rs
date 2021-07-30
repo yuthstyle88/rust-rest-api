@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
-use crate::error_handler::MyError;
-use actix_web::HttpResponse;
 
-pub type MyResult = Result<HttpResponse, MyError>;
+#[macro_export]
+macro_rules! res {
+    ($x:expr) => {web::Json(JsonOk::ok($x))}
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Json<K, T>
@@ -14,6 +15,16 @@ pub struct Json<K, T>
     pub data: T,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JsonOk<'a, T>
+    where T: Sized
+{
+    pub code: u16,
+    pub message: &'a str,
+    pub data: T,
+}
+
+
 impl<K, T> Json<K, T> {
     pub fn new(code: K, message: &str, data: T) -> Json<K, T> {
         Json {
@@ -23,6 +34,18 @@ impl<K, T> Json<K, T> {
         }
     }
 }
+
+impl<'a, T> JsonOk<'a, T> {
+    pub fn ok(data: T) -> JsonOk<'a, T> {
+        JsonOk {
+            code: Code::Ok as u16,
+            message: "ok",
+            data,
+        }
+    }
+}
+
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Code {
@@ -136,11 +159,4 @@ pub enum Code {
     // 460 Client closed the connection with the load balancer before the idle timeout period elapsed. Typically when client timeout is sooner than the Elastic Load Balancer's timeout.
     // 463 The load balancer received an X-Forwarded-For request header with more than 30 IP addresses.
     // 561 Unauthorized
-}
-
-impl Code {
-    pub fn as_u16(&self) -> u16 {
-        let me = self.clone();
-        me as u16
-    }
 }

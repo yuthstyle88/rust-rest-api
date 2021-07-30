@@ -4,10 +4,11 @@ use actix_web::{delete, get, post, web, HttpResponse, Responder};
 use serde_json::json;
 use anyhow::anyhow;
 use actix_web::http::StatusCode;
-use crate::response::MyResult;
+use crate::{res,response::JsonOk};
+
 
 #[get("/users")]
-async fn find_all() -> MyResult {
+async fn find_all() -> Result<impl Responder, MyError> {
     let user = Users::find_all().map(|u| u)?;
     Ok(HttpResponse::Ok().json(user))
 }
@@ -16,7 +17,7 @@ async fn find_all() -> MyResult {
 async fn find(id: web::Path<i32>) -> Result<impl Responder, MyError> {
     let user = Users::find(id.into_inner()).map(|u| u).map_err(|e| e)?;
 
-    Ok(web::Json(user))
+    Ok(res!(user))
 }
 
 #[post("/post_login")]
