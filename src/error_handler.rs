@@ -1,6 +1,7 @@
-use actix_web::{HttpResponse,ResponseError};
+use actix_web::{HttpResponse, ResponseError};
 use actix_web::http::StatusCode;
 use serde::Serialize;
+use derive_more::{Display, Error};
 
 #[cfg(not(tarpaulin_include))]
 pub type MyResult<V> = std::result::Result<V, MyError>;
@@ -46,7 +47,7 @@ impl std::fmt::Display for MyError {
     }
 }
 
-impl ResponseError for MyError {
+impl ResponseError for MyError{
     fn status_code(&self) -> StatusCode {
         match self.inner.downcast_ref::<diesel::result::Error>() {
             Some(diesel::result::Error::NotFound) => StatusCode::NOT_FOUND,

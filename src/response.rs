@@ -6,8 +6,8 @@ use crate::error_handler::MyError;
 pub type MyResult<V> = std::result::Result<V, MyError>;
 
 #[macro_export]
-macro_rules! res {
-    ($x:expr) => {web::Json(JsonOk::ok($x))}
+macro_rules! Ok {
+    ($x:expr) => {Ok(web::Json(JsonOk::ok($x)))}
 }
 
 #[derive(Debug, Serialize, Deserialize)]

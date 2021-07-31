@@ -1,11 +1,13 @@
 use crate::users::{User, Users, UserLogin, UserUpdate};
 use crate::error_handler::{MyError, ApiError};
-use actix_web::{delete, get, post, web, HttpResponse, Responder,Result};
+use actix_web::{delete, get, post, web, HttpResponse, Responder, Result};
 use serde_json::json;
 use anyhow::anyhow;
 use actix_web::http::StatusCode;
-use crate::{res,response::{Json,JsonOk}};
+use crate::{Ok, response::{Json, JsonOk}};
 use crate::response::MyResult;
+use actix_web::test::config;
+use serde::Deserialize;
 
 
 #[get("/users")]
@@ -18,7 +20,7 @@ async fn find_all() -> Result<impl Responder, MyError> {
 async fn find(id: web::Path<i32>) -> Result<impl Responder, MyError> {
     let user = Users::find(id.into_inner()).map(|u| u).map_err(|e| e)?;
 
-    Ok(res!(user))
+    Ok!(user)
 }
 
 #[post("/post_login")]
@@ -33,7 +35,7 @@ async fn login(user: web::Json<UserLogin>) -> Result<HttpResponse, MyError> {
          phone_number: 0
      };*/
     let ddd = Json::new(200, &*user.first_name, user.created_at);
-   // let ddd = Json::new(200,xxx.as_str(),"sdfsdf");
+    // let ddd = Json::new(200,xxx.as_str(),"sdfsdf");
     Ok(HttpResponse::Ok().json(ddd))
 }
 
@@ -65,11 +67,126 @@ async fn delete(id: web::Path<i32>) -> Result<impl Responder, MyError> {
 }
 
 pub fn init_routes(comfig: &mut web::ServiceConfig) {
-    comfig.service(find_all);
-    comfig.service(find);
+   // comfig.service(find_all);
     comfig.service(login);
     comfig.service(signup);
     comfig.service(create);
     comfig.service(update);
     comfig.service(delete);
+    comfig.service(
+        web::resource("/users/{id}")
+            .route(web::get().to(route_get::<i32>)),
+    );
+}
+
+#[derive(Deserialize)]
+pub struct GetUser {
+    pub id: Option<i32>,
+}
+
+#[async_trait::async_trait(? Send)]
+impl Perform for GetUser {
+    type Response = Users;
+    async fn perform(
+        &self,
+    ) -> Result<Users, MyError> {
+        let data: &GetUser = self;
+        Users::find(data.id.unwrap())
+    }
+}
+#[async_trait::async_trait(? Send)]
+impl Perform for i32 {
+    type Response = Users;
+    async fn perform(
+        &self,
+    ) -> Result<Users, MyError> {
+        let id = self;
+        Users::find(*id)
+    }
+}
+
+
+#[async_trait::async_trait(? Send)]
+pub trait Perform {
+    type Response: serde::ser::Serialize + Send;
+
+    async fn perform(
+        &self,
+    ) -> Result<Self::Response, MyError>;
+}
+
+#[async_trait::async_trait(? Send)]
+pub trait PerformCrud {
+    type Response: serde::ser::Serialize + Send;
+
+    async fn perform(
+        &self,
+    ) -> Result<Self::Response, MyError>;
+}
+
+
+async fn perform<Request>(
+    data: Request,
+) -> MyResult<impl Responder>
+    where
+        Request: Perform,
+        Request: Send + 'static,
+{
+    let res = data
+        .perform()
+        .await
+        .map(|json| HttpResponse::Ok().json(json))
+        .map_err(|err| MyError::new(anyhow!(err)))?;
+    Ok(res)
+}
+
+async fn route_get<'a, Data>(
+    data: web::Path<Data>,
+) -> MyResult<impl Responder>
+    where
+        Data: Deserialize<'a> + Send + 'static + Perform,
+{
+    perform::<Data>(data.into_inner()).await
+}
+
+async fn route_post<'a, Data>(
+    data: web::Json<Data>,
+) -> MyResult<impl Responder>
+    where
+        Data: Deserialize<'a> + Send + 'static + Perform,
+{
+    perform::<Data>(data.0).await
+}
+
+async fn perform_crud<Request>(
+    data: Request,
+) -> MyResult<impl Responder>
+    where
+        Request: PerformCrud,
+        Request: Send + 'static,
+{
+    let res = data
+        .perform()
+        .await
+        .map(|json| HttpResponse::Ok().json(json))
+        .map_err(|err| MyError::new(anyhow!(err)))?;
+    Ok(res)
+}
+
+async fn route_get_crud<'a, Data>(
+    data: web::Query<Data>,
+) -> MyResult<impl Responder>
+    where
+        Data: Deserialize<'a> + Send + 'static + PerformCrud,
+{
+    perform_crud::<Data>(data.0).await
+}
+
+async fn route_post_crud<'a, Data>(
+    data: web::Json<Data>,
+) -> MyResult<impl Responder>
+    where
+        Data: Deserialize<'a> + Send + 'static + PerformCrud,
+{
+    perform_crud::<Data>(data.0).await
 }
