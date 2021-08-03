@@ -1,0 +1,22 @@
+[package]
+name = "firebase-auth-rust"
+version = "0.1.0"
+authors = ["Harry Potter <playsave999@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["blocking"]
+async = ["async-trait"]
+blocking = ["reqwest/blocking"]
+
+[dependencies]
+note_utils = { path = "../utils" }
+async-trait = { version = "0.1", optional = true }
+reqwest = { version = "0.10", features = ["cookies", "blocking", "json"] }
+serde = { version = "1.0", features = ["default", "derive", "rc"] }
+serde_json = "1.0"
+serde_qs = "0.8"
+tokio-compat-02 = "0.2.0"
+anyhow = "1.0.42"
+#tokio = { version = "1", features = ["full"] }
