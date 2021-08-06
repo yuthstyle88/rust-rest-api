@@ -15,24 +15,19 @@ pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgC
 
 pub struct NoteContext {
     pub pool: DbPool,
-    pub firebase_auth_service: firebase_auth_rust::Service,
 }
 
 impl NoteContext {
     pub fn create(
         pool: DbPool,
-        firebase_auth_service: firebase_auth_rust::Service,
     ) -> NoteContext {
         NoteContext {
             pool,
-            firebase_auth_service,
+
         }
     }
     pub fn pool(&self) -> &DbPool {
         &self.pool
-    }
-    pub fn firebase(&self) -> &firebase_auth_rust::Service {
-        &self.firebase_auth_service
     }
 }
 
@@ -40,7 +35,6 @@ impl Clone for NoteContext {
     fn clone(&self) -> Self {
         NoteContext {
             pool: self.pool.clone(),
-            firebase_auth_service: self.firebase_auth_service.clone(),
         }
     }
 }
@@ -74,20 +68,17 @@ pub async fn init() -> Result<(), MyError> {
     // data.insert("facebook_secret".to_string(), facebook_secret);
     // data.insert("facebook_access_token".to_string(), facebook_access_token);
 
-    let api_key = env::var("FIREBASE_WEB_API_KEY").expect("Variable `FIREBASE_WEB_API_KEY` not set!");
-    let service = firebase_auth_rust::Service::new(api_key.as_str());
 
     HttpServer::new(move || {
         let context = NoteContext::create(
             pool.clone(),
-            service.to_owned(),
         );
         App::new()
             .app_data(Data::new(context))
             .wrap(middleware::Compress::new(ContentEncoding::Gzip))
             .service(
                 web::scope("/api")
-                    .wrap(HttpAuthentication::bearer(validator))
+                   // .wrap(HttpAuthentication::bearer(validator))
                     .configure(users::init_routes)
             )
     }).bind(format!("{}:{}", host, port))?

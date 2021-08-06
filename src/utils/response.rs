@@ -1,5 +1,5 @@
 use actix_web::http::StatusCode;
-use serde::{Deserialize, Serialize};
+use note_utils::my_serde::{Deserialize, Serialize};
 
 #[macro_export]
 macro_rules! Ok {
@@ -7,6 +7,7 @@ macro_rules! Ok {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "note_utils::my_serde")]
 pub struct JsonOk<T>
     where T: Sized
 {

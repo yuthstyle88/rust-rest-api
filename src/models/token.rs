@@ -2,7 +2,7 @@ use std::str;
 
 use chrono::Local;
 use jsonwebtoken::{EncodingKey, Header};
-use serde::{Deserialize, Serialize};
+use note_utils::my_serde::{Deserialize, Serialize};
 
 use crate::constants::KEY;
 
@@ -14,6 +14,7 @@ static ONE_WEEK: i64 = 60 * 60 * 24 * 7;
 static ONE_YEAR: i64 = 60 * 60 * 24 * 365; // in seconds
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "note_utils::my_serde")]
 pub struct AuthToken {
     // issued at
     pub iat: i64,
@@ -41,12 +42,14 @@ impl AuthToken {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(crate = "note_utils::my_serde")]
 pub struct AuthTokenMessage {
     pub token: String,
     pub token_type: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "note_utils::my_serde")]
 pub struct AuthMessageInfo {
     pub username: String,
     pub password: String,

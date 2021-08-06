@@ -3,6 +3,9 @@ extern crate lazy_static;
 #[macro_use]
 extern crate strum_macros;
 
+#[macro_use]
+extern crate serde;
+
 pub mod apub;
 pub mod claims;
 pub mod rate_limit;
@@ -15,6 +18,7 @@ pub mod utils;
 pub mod version;
 pub mod encryption;
 pub mod jwt;
+pub mod my_serde;
 
 use http::StatusCode;
 use std::fmt;
@@ -42,7 +46,7 @@ macro_rules! location_info {
   };
 }
 
-use serde::Serialize;
+use my_serde::Serialize;
 
 #[cfg(not(tarpaulin_include))]
 pub type MyResult<V> = std::result::Result<V, MyError>;

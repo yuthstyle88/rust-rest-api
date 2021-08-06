@@ -20,11 +20,10 @@ futures = "0.3"
 uuid = { version = "0.6", features = ["serde", "v4"] }
 anyhow = "1.0.42"
 jsonwebtoken = "7.1"
-serde = { version = "1.0.126", features = ["derive"] }
 serde_json = { version = "1.0.64", features = ["preserve_order"] }
 lazy_static = "1.4"
 log = "0.4"
 dotenv = "0.11"
 tr = "0.1.6"
 note_utils = { path = "utils" }
-firebase-auth-rust = { path = "firebase-auth-rust", features = ["async"] }
+#firebase-auth-rust = { path = "firebase-auth-rust", features = ["async"] }

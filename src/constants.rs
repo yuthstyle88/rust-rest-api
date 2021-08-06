@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use note_utils::my_serde::{Deserialize, Serialize};
 
 //pub static DEFAULT_LANGUAGE: &str = "th-TH";
 
@@ -26,6 +26,7 @@ pub const CUSTOMER: &str = "Customer";
 // pub const NOTE_TG: &str = "X-NoteTg-Signature";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "note_utils::my_serde")]
 pub struct Empty;
 
 // Misc

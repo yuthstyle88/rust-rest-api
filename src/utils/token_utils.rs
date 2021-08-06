@@ -8,7 +8,7 @@ use crate::constants;
 use crate::users::User;
 use diesel::PgConnection;
 use actix_web::dev::RequestHead;
-use serde::Deserialize;
+
 use crate::models::AuthToken;
 use actix_web::http::HeaderValue;
 
