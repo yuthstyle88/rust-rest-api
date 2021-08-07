@@ -6,6 +6,7 @@ use note_utils::my_serde::{Deserialize, Serialize};
 use diesel::sql_query;
 use diesel::sql_types::Integer;
 use note_utils::MyError;
+use diesel::result::Error;
 
 
 #[derive(Debug,Serialize, Deserialize, AsChangeset, Insertable)]
@@ -32,13 +33,12 @@ pub struct User {
 
 impl User{
 
-    pub fn find(conn: &PgConnection, id: i32) -> Result<Vec<User>, MyError> {
+    pub fn find(conn: &PgConnection, id: i32) -> Result<User, MyError> {
 
-        let users = sql_query("SELECT * FROM users  WHERE id = $1 ");
+        let users = sql_query("SELECT * FROM users  WHERE id =1 ");
 
-        let users =   users.bind::<Integer, _>(1)
-            .load(conn)?;
-
+        let users =   users.get_result(conn)?;
+       // Ok(users.into_iter().next().ok_or(Error::NotFound)?)
         Ok(users)
     }
 
